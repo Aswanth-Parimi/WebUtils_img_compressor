@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebUtils - Free Browser Micro-Tools</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --border-color: #334155;
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --accent: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(8px);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .logo {
+            font-size: 1.25rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-color);
+        }
+
+        .logo span {
+            color: var(--primary);
+        }
+
+        nav {
+            display: flex;
+            gap: 0.5rem;
+            background: var(--card-bg);
+            padding: 0.25rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .nav-btn.active {
+            background-color: var(--primary);
+            color: #fff;
+        }
+
+        main {
+            flex: 1;
+            max-width: 1200px;
+            width: 100%;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .tool-panel {
+            display: none;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        .tool-panel.active {
+            display: grid;
+        }
+
+        @media (min-width: 768px) {
+            .tool-panel {
+                grid-template-columns: 350px 1fr;
+            }
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .card h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.75rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--primary);
+        }
+
+        select, input[type="color"] {
+            width: 100%;
+            padding: 0.5rem;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            color: var(--text-color);
+            outline: none;
+        }
+
+        input[type="color"] {
+            height: 40px;
+            cursor: pointer;
+        }
+
+        .drop-zone {
+            border: 2px dashed var(--border-color);
+            border-radius: 0.5rem;
+            padding: 3rem 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s, background-color 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: var(--primary);
+            background-color: rgba(99, 102, 241, 0.05);
+        }
+
+        .drop-zone p {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: background-color 0.2s;
+            width: 100%;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-success {
+            background-color: var(--accent);
+        }
+
+        .btn-success:hover {
+            background-color: #059669;
+        }
+
+        .preview-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 350px;
+            background: var(--bg-color);
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+            padding: 1rem;
+        }
+
+        .preview-area img, .preview-area svg {
+            max-width: 100%;
+            max-height: 450px;
+            object-fit: contain;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            width: 100%;
+        }
+
+        .metric-box {
+            background: var(--bg-color);
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .metric-box div:first-child {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+        }
+
+        .metric-box div:last-child {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        /* Background Pattern for SVG Canvas */
+        .checkerboard {
+            background-image: linear-gradient(45deg, #1e293b 25%, transparent 25%), 
+                              linear-gradient(-45deg, #1e293b 25%, transparent 25%), 
+                              linear-gradient(45deg, transparent 75%, #1e293b 75%), 
+                              linear-gradient(-45deg, transparent 75%, #1e293b 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">
+            ⚡ WebUtils <span>Client-Side</span>
+        </div>
+        <nav>
+            <button class="nav-btn active" onclick="switchTool('compressor')">Image Compressor</button>
+            <button class="nav-btn" onclick="switchTool('svg')">SVG Generator</button>
+        </nav>
+    </header>
+
+    <main>
+        <!-- TOOL 1: IMAGE COMPRESSOR -->
+        <section id="compressor" class="tool-panel active">
+            <div class="card">
+                <h2>Compression Controls</h2>
+                
+                <div class="form-group">
+                    <label for="quality">Quality: <span id="qualityVal">80%</span></label>
+                    <input type="range" id="quality" min="5" max="100" value="80">
+                </div>
+
+                <div class="form-group">
+                    <label for="mimeType">Export Format</label>
+                    <select id="mimeType">
+                        <option value="image/jpeg">JPEG</option>
+                        <option value="image/webp">WebP</option>
+                        <option value="image/png">PNG (Lossless)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="maxWidth">Max Width (px, Optional)</label>
+                    <select id="maxWidth">
+                        <option value="original">Original Size</option>
+                        <option value="1920">1920px (Full HD)</option>
+                        <option value="1280">1280px (HD)</option>
+                        <option value="800">800px (Web)</option>
+                    </select>
+                </div>
+
+                <button id="downloadBtn" class="btn btn-success" disabled onclick="downloadCompressedImage()">
+                    Download Image
+                </button>
+            </div>
+
+            <div class="card">
+                <h2>Preview & Metrics</h2>
+                
+                <div id="dropZone" class="drop-zone">
+                    <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    <p>Drag & Drop an image here or click to browse</p>
+                    <input type="file" id="fileInput" accept="image/*" style="display: none;">
+                </div>
+
+                <div class="preview-area checkerboard" id="imgPreviewContainer" style="display: none;">
+                    <img id="imagePreview" alt="Compressed Preview">
+                </div>
+
+                <div class="metrics-grid">
+                    <div class="metric-box">
+                        <div>Original</div>
+                        <div id="origSize">0 KB</div>
+                    </div>
+                    <div class="metric-box">
+                        <div>Compressed</div>
+                        <div id="compSize">0 KB</div>
+                    </div>
+                    <div class="metric-box">
+                        <div>Savings</div>
+                        <div id="savings" style="color: var(--accent);">0%</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TOOL 2: SVG GENERATOR -->
+        <section id="svg" class="tool-panel">
+            <div class="card">
+                <h2>Pattern Generator</h2>
+
+                <div class="form-group">
+                    <label for="svgType">Pattern Type</label>
+                    <select id="svgType" onchange="generateSVG()">
+                        <option value="blobs">Random Blobs</option>
+                        <option value="grid">Geometric Grid</option>
+                        <option value="waves">Layered Waves</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="svgColor1">Primary Color</label>
+                    <input type="color" id="svgColor1" value="#6366f1" onchange="generateSVG()">
+                </div>
+
+                <div class="form-group">
+                    <label for="svgColor2">Secondary Color</label>
+                    <input type="color" id="svgColor2" value="#10b981" onchange="generateSVG()">
+                </div>
+
+                <div class="form-group">
+                    <label for="svgComplexity">Complexity / Elements: <span id="complexityVal">5</span></label>
+                    <input type="range" id="svgComplexity" min="2" max="15" value="5" oninput="document.getElementById('complexityVal').innerText = this.value; generateSVG()">
+                </div>
+
+                <button class="btn" onclick="generateSVG()">Regenerate</button>
+                <button class="btn btn-success" onclick="downloadSVG()">Download SVG</button>
+            </div>
+
+            <div class="card">
+                <h2>SVG Preview</h2>
+                <div class="preview-area checkerboard" id="svgPreviewContainer">
+                    <!-- SVG gets injected here dynamically -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // NAVIGATION LOGIC
+        function switchTool(toolId) {
+            document.querySelectorAll('.tool-panel').forEach(panel => panel.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(toolId).classList.add('active');
+            event.target.classList.add('active');
+
+            if (toolId === 'svg' && !document.querySelector('#svgPreviewContainer svg')) {
+                generateSVG();
+            }
+        }
+
+        // TOOL 1: IMAGE COMPRESSOR LOGIC
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const qualityInput = document.getElementById('quality');
+        const qualityVal = document.getElementById('qualityVal');
+        const mimeTypeInput = document.getElementById('mimeType');
+        const maxWidthInput = document.getElementById('maxWidth');
+        const imagePreview = document.getElementById('imagePreview');
+        const imgPreviewContainer = document.getElementById('imgPreviewContainer');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        let rawImage = null;
+        let compressedBlob = null;
+
+        // UI Event Listeners
+        dropZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
+        
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+        });
+
+        qualityInput.addEventListener('input', (e) => {
+            qualityVal.innerText = `${e.target.value}%`;
+            processImage();
+        });
+
+        mimeTypeInput.addEventListener('change', processImage);
+        maxWidthInput.addEventListener('change', processImage);
+
+        function handleFile(file) {
+            if (!file || !file.type.startsWith('image/')) return;
+
+            document.getElementById('origSize').innerText = formatBytes(file.size);
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                rawImage = new Image();
+                rawImage.onload = () => {
+                    dropZone.style.display = 'none';
+                    imgPreviewContainer.style.display = 'flex';
+                    processImage();
+                };
+                rawImage.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function processImage() {
+            if (!rawImage) return;
+
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            let width = rawImage.width;
+            let height = rawImage.height;
+            const maxW = maxWidthInput.value;
+
+            // Resize logic
+            if (maxW !== 'original' && width > parseInt(maxW)) {
+                height = Math.round((height * parseInt(maxW)) / width);
+                width = parseInt(maxW);
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+
+            // Fill transparent background with white if converting PNG to JPEG
+            if (mimeTypeInput.value === 'image/jpeg') {
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(0, 0, width, height);
+            }
+
+            ctx.drawImage(rawImage, 0, 0, width, height);
+
+            const quality = parseInt(qualityInput.value) / 100;
+            const mimeType = mimeTypeInput.value;
+
+            canvas.toBlob((blob) => {
+                compressedBlob = blob;
+                imagePreview.src = URL.createObjectURL(blob);
+                
+                // Update metrics
+                const origSize = rawImage.src.length; // Approximate from base64 string
+                document.getElementById('compSize').innerText = formatBytes(blob.size);
+                
+                // Fetch rough original raw byte length from DataURL for savings accuracy
+                const originalBytes = Math.round((rawImage.src.length - 22) * 3 / 4);
+                const savings = ((originalBytes - blob.size) / originalBytes * 100).toFixed(1);
+                
+                const savingsEl = document.getElementById('savings');
+                savingsEl.innerText = `${savings > 0 ? savings : 0}%`;
+                
+                downloadBtn.disabled = false;
+            }, mimeType, quality);
+        }
+
+        function downloadCompressedImage() {
+            if (!compressedBlob) return;
+            const ext = mimeTypeInput.value.split('/')[1];
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(compressedBlob);
+            a.download = `optimized-image.${ext}`;
+            a.click();
+        }
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // TOOL 2: SVG GENERATOR LOGIC
+        function generateSVG() {
+            const type = document.getElementById('svgType').value;
+            const color1 = document.getElementById('svgColor1').value;
+            const color2 = document.getElementById('svgColor2').value;
+            const count = parseInt(document.getElementById('svgComplexity').value);
+            const container = document.getElementById('svgPreviewContainer');
+
+            const width = 500;
+            const height = 500;
+            let svgInner = '';
+
+            if (type === 'blobs') {
+                for (let i = 0; i < count; i++) {
+                    const cx = Math.random() * width;
+                    const cy = Math.random() * height;
+                    const r = Math.random() * 80 + 20;
+                    const color = i % 2 === 0 ? color1 : color2;
+                    const opacity = (Math.random() * 0.5 + 0.3).toFixed(2);
+                    svgInner += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${color}" opacity="${opacity}" />`;
+                }
+            } else if (type === 'grid') {
+                const step = width / count;
+                for (let x = 0; x < width; x += step) {
+                    for (let y = 0; y < height; y += step) {
+                        const color = (x + y) % (step * 2) === 0 ? color1 : color2;
+                        svgInner += `<rect x="${x + 2}" y="${y + 2}" width="${step - 4}" height="${step - 4}" rx="8" fill="${color}" opacity="0.8" />`;
+                    }
+                }
+            } else if (type === 'waves') {
+                const step = height / count;
+                for (let i = 0; i < count; i++) {
+                    const y = i * step;
+                    const color = i % 2 === 0 ? color1 : color2;
+                    svgInner += `<path d="M 0 ${y} Q ${width/4} ${y - 30}, ${width/2} ${y} T ${width} ${y} L ${width} ${height} L 0 ${height} Z" fill="${color}" opacity="${(1 / count * (i + 1)).toFixed(2)}" />`;
+                }
+            }
+
+            const svgString = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="100%" height="100%">${svgInner}</svg>`;
+            container.innerHTML = svgString;
+        }
+
+        function downloadSVG() {
+            const svgContent = document.querySelector('#svgPreviewContainer').innerHTML;
+            if (!svgContent) return;
+            
+            const blob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'generated-pattern.svg';
+            a.click();
+        }
+    </script>
+</body>
+</html>
